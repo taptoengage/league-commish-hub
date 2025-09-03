@@ -327,7 +327,7 @@ serve(async (req) => {
     const forceRefresh = url.searchParams.get('force') === 'true';
 
     // Check cache first (unless force refresh)
-    const cacheKey = `${leagueId}-${week}`;
+    const cacheKey = `sleeper:${leagueId}:${week}`;
     if (!forceRefresh && cache.has(cacheKey)) {
       const cached = cache.get(cacheKey)!;
       const age = Date.now() - cached.timestamp;
