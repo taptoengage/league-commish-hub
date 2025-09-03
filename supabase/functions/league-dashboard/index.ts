@@ -39,35 +39,21 @@ interface SleeperMatchup {
   points: number;
 }
 
-interface LeagueDashboardDTO {
-  league: {
-    id: string;
-    name: string;
-    season: number;
-    week: number;
-  };
-  matchups: Array<{
-    id: string;
-    week: number;
-    home: {
-      teamId: string;
-      displayName: string;
-      handle?: string;
-      avatarUrl?: string;
-      projected: number | null;
-      record?: { wins: number; losses: number; ties?: number; rank?: number };
-      winProb?: number | null;
-    };
-    away: {
-      teamId: string;
-      displayName: string;
-      handle?: string;
-      avatarUrl?: string;
-      projected: number | null;
-      record?: { wins: number; losses: number; ties?: number; rank?: number };
-      winProb?: number | null;
-    };
-  }>;
+// Exported DTO types
+export type RecordSummary = { wins?: number; losses?: number; ties?: number; rank?: number };
+export type TeamSide = {
+  teamId: string;
+  displayName: string;
+  handle?: string;
+  avatarUrl?: string;
+  projected?: number | null;
+  points?: number | null;
+  record?: RecordSummary;
+  winProb?: number | null; // 0..1
+};
+export type LeagueDashboardDTO = {
+  league: { id: string; name: string; season: number; week: number };
+  matchups: Array<{ id: string; week: number; home: TeamSide; away: TeamSide }>;
   quickStats: {
     topSeed?: { teamId: string; displayName: string };
     pointsForLeader?: { teamId: string; displayName: string; points: number };
@@ -75,7 +61,7 @@ interface LeagueDashboardDTO {
     waiverOrder?: string[];
     teamCount: number;
   };
-}
+};
 
 // Cache store (in-memory for this function instance)
 const cache = new Map<string, { data: LeagueDashboardDTO; timestamp: number }>();
@@ -109,11 +95,13 @@ const getMockData = (leagueId: string, week: number): LeagueDashboardDTO => {
       home: {
         ...mockTeams[i],
         projected: homeProjected,
+        points: null,
         winProb: homeWinProb,
       },
       away: {
         ...mockTeams[i + 1],
         projected: awayProjected,
+        points: null,
         winProb: 1 - homeWinProb,
       },
     });
@@ -232,7 +220,8 @@ class SleeperAdapter {
             displayName: roster1.displayName,
             handle: roster1.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
             avatarUrl: roster1.avatarUrl,
-            projected: team1.points,
+            points: team1.points,
+            projected: null,
             record: {
               wins: roster1.settings.wins,
               losses: roster1.settings.losses,
@@ -245,7 +234,8 @@ class SleeperAdapter {
             displayName: roster2.displayName,
             handle: roster2.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
             avatarUrl: roster2.avatarUrl,
-            projected: team2.points,
+            points: team2.points,
+            projected: null,
             record: {
               wins: roster2.settings.wins,
               losses: roster2.settings.losses,
@@ -254,7 +244,7 @@ class SleeperAdapter {
             winProb: 1 - team1WinProb,
           },
         };
-      }).filter(Boolean) as NonNullable<ReturnType<typeof normalizedMatchups[0]>>[];
+      }).filter(Boolean) as Array<{ id: string; week: number; home: TeamSide; away: TeamSide }>;
 
       // Calculate quick stats
       const sortedByWins = [...rosters].sort((a, b) => b.settings.wins - a.settings.wins);
