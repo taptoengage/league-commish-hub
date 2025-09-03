@@ -83,29 +83,32 @@ const getMockData = (leagueId: string, week: number): LeagueDashboardDTO => {
     { teamId: '8', displayName: 'Fumble Finders', handle: 'fumblers', record: { wins: 3, losses: 9, rank: 8 } },
   ];
 
-  const getRandomProjection = () => Math.floor(Math.random() * 70) + 80;
-  const calculateWinProb = (homeProj: number, awayProj: number) => homeProj / (homeProj + awayProj);
+  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
   const matchups = [];
   for (let i = 0; i < mockTeams.length; i += 2) {
-    const homeProjected = getRandomProjection();
-    const awayProjected = getRandomProjection();
-    const homeWinProb = calculateWinProb(homeProjected, awayProjected);
+    const projected1 = rand(95, 135);
+    const projected2 = rand(95, 135);
+    const points1 = rand(0, 40);
+    const points2 = rand(0, 40);
+
+    const denom = projected1 + projected2;
+    const p1 = denom > 0 ? projected1 / denom : 0.5;
     
     matchups.push({
       id: `matchup_${i / 2 + 1}`,
       week,
       home: {
         ...mockTeams[i],
-        projected: homeProjected,
-        points: null,
-        winProb: homeWinProb,
+        projected: projected1,
+        points: points1,
+        winProb: p1,
       },
       away: {
         ...mockTeams[i + 1],
-        projected: awayProjected,
-        points: null,
-        winProb: 1 - homeWinProb,
+        projected: projected2,
+        points: points2,
+        winProb: 1 - p1,
       },
     });
   }
@@ -306,6 +309,12 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    if (url.pathname.endsWith('/api/health')) {
+      return new Response(
+        JSON.stringify({ ok: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const pathParts = url.pathname.split('/');
     
     // Extract leagueId from path: /api/league/:leagueId/dashboard
