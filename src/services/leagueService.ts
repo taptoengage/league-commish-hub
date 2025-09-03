@@ -76,8 +76,11 @@ export class LeagueService {
   }
 }
 
-// Export a singleton instance (using mock by default as requested)
-export const leagueService = new LeagueService(true);
+// Toggle this flag to switch between API and mock data
+const USE_MOCK_DATA = false; // Set to true to use mock data, false for API
+
+// Export a singleton instance (now defaults to API mode)
+export const leagueService = new LeagueService(USE_MOCK_DATA);
 
 // Export the class for custom instances
 export default LeagueService;

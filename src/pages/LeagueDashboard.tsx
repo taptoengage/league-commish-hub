@@ -40,6 +40,12 @@ export const LeagueDashboard: React.FC = () => {
         leagueService.getChatPreview(leagueId),
       ]);
 
+      // Log full API response for verification
+      console.log('=== LEAGUE DASHBOARD API RESPONSE ===');
+      console.log('Dashboard data:', JSON.stringify(dashboard, null, 2));
+      console.log('Chat data:', JSON.stringify(chat, null, 2));
+      console.log('=======================================');
+
       setDashboardData(dashboard);
       setChatData(chat);
       setLastUpdated(new Date());
