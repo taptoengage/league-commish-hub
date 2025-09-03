@@ -30,6 +30,7 @@ interface SleeperRoster {
     ties: number;
     fpts: number;
     fpts_against: number;
+    rank?: number;
   };
 }
 
@@ -217,6 +218,8 @@ class SleeperAdapter {
         const homeWinProb = denom > 0 ? b1 / denom : 0.5;
 
         const id = `sleeper:${leagueId}:${week}:${matchupId}`;
+        const r1 = (homeRoster as any)?.settings ?? {};
+        const r2 = (awayRoster as any)?.settings ?? {};
 
         return {
           id,
@@ -229,9 +232,10 @@ class SleeperAdapter {
             points: homeTeam.points ?? null,
             projected: homeTeam.metadata?.proj ?? null,
             record: {
-              wins: homeRoster.settings.wins,
-              losses: homeRoster.settings.losses,
-              ties: homeRoster.settings.ties,
+              wins: r1.wins ?? 0,
+              losses: r1.losses ?? 0,
+              ties: r1.ties ?? 0,
+              rank: r1.rank ?? undefined,
             },
             winProb: homeWinProb,
           },
@@ -243,9 +247,10 @@ class SleeperAdapter {
             points: awayTeam.points ?? null,
             projected: awayTeam.metadata?.proj ?? null,
             record: {
-              wins: awayRoster.settings.wins,
-              losses: awayRoster.settings.losses,
-              ties: awayRoster.settings.ties,
+              wins: r2.wins ?? 0,
+              losses: r2.losses ?? 0,
+              ties: r2.ties ?? 0,
+              rank: r2.rank ?? undefined,
             },
             winProb: 1 - homeWinProb,
           },
