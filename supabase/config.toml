@@ -1,1 +1,4 @@
 project_id = "qeczfwvdthkiqorirjae"
+
+[functions.league-dashboard]
+verify_jwt = false
