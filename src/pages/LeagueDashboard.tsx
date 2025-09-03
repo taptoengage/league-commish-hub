@@ -4,9 +4,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { RefreshCw, Calendar } from 'lucide-react';
-import { LeagueDashboardDTO, ChatPreviewData } from '@/types/league';
-import { mockLeagueService } from '@/services/mockLeagueService';
+import { LeagueDashboardDTO, ChatPreviewData, Matchup } from '@/types/league';
+import { leagueService } from '@/services/leagueService';
 import { MatchupCard } from '@/components/referee/MatchupCard';
+import { MatchupDetailSheet } from '@/components/referee/MatchupDetailSheet';
 import { QuickStatsRow } from '@/components/referee/QuickStatsRow';
 import { ChatPreview } from '@/components/referee/ChatPreview';
 import { WeekSelector } from '@/components/referee/WeekSelector';
@@ -21,6 +22,8 @@ export const LeagueDashboard: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [activeTab, setActiveTab] = useState('fantasy');
+  const [selectedMatchup, setSelectedMatchup] = useState<Matchup | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   const loadDashboardData = async (force = false) => {
     if (!leagueId) return;
@@ -33,8 +36,8 @@ export const LeagueDashboard: React.FC = () => {
 
     try {
       const [dashboard, chat] = await Promise.all([
-        mockLeagueService.getLeagueDashboard(leagueId, currentWeek),
-        mockLeagueService.getChatPreview(leagueId),
+        leagueService.getLeagueDashboard(leagueId, currentWeek, force),
+        leagueService.getChatPreview(leagueId),
       ]);
 
       setDashboardData(dashboard);
@@ -63,6 +66,16 @@ export const LeagueDashboard: React.FC = () => {
   const handleOpenChat = () => {
     setActiveTab('chat');
     // TODO: Navigate to full chat view
+  };
+
+  const handleMatchupTap = (matchup: Matchup) => {
+    setSelectedMatchup(matchup);
+    setIsDetailSheetOpen(true);
+  };
+
+  const handleCloseDetailSheet = () => {
+    setIsDetailSheetOpen(false);
+    setSelectedMatchup(null);
   };
 
   const formatLastUpdated = (date: Date | null) => {
@@ -191,10 +204,7 @@ export const LeagueDashboard: React.FC = () => {
               <MatchupCard
                 key={matchup.id}
                 matchup={matchup}
-                onTap={(matchup) => {
-                  // TODO: Open matchup detail sheet
-                  console.log('Open matchup detail:', matchup.id);
-                }}
+                onTap={handleMatchupTap}
               />
             ))}
           </div>
@@ -220,6 +230,13 @@ export const LeagueDashboard: React.FC = () => {
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         chatMessageCount={chatData?.totalCount}
+      />
+
+      {/* Matchup Detail Sheet */}
+      <MatchupDetailSheet
+        isOpen={isDetailSheetOpen}
+        onClose={handleCloseDetailSheet}
+        matchup={selectedMatchup}
       />
     </div>
   );
