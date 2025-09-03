@@ -36,7 +36,8 @@ interface SleeperRoster {
 interface SleeperMatchup {
   roster_id: number;
   matchup_id: number;
-  points: number;
+  points?: number;
+  metadata?: { proj?: number };
 }
 
 // Exported DTO types
@@ -209,9 +210,11 @@ class SleeperAdapter {
           return null;
         }
 
-        // Calculate win probability based on current points
-        const total = (homeTeam.points || 0) + (awayTeam.points || 0);
-        const homeWinProb = total > 0 ? (homeTeam.points || 0) / total : 0.5;
+        // Win probability: prefer projections, fallback to points
+        const b1 = (homeTeam.metadata?.proj ?? homeTeam.points ?? 0);
+        const b2 = (awayTeam.metadata?.proj ?? awayTeam.points ?? 0);
+        const denom = b1 + b2;
+        const homeWinProb = denom > 0 ? b1 / denom : 0.5;
 
         const id = `sleeper:${leagueId}:${week}:${matchupId}`;
 
@@ -223,8 +226,8 @@ class SleeperAdapter {
             displayName: homeRoster.displayName,
             handle: homeRoster.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
             avatarUrl: homeRoster.avatarUrl,
-            points: homeTeam.points,
-            projected: null,
+            points: homeTeam.points ?? null,
+            projected: homeTeam.metadata?.proj ?? null,
             record: {
               wins: homeRoster.settings.wins,
               losses: homeRoster.settings.losses,
@@ -237,8 +240,8 @@ class SleeperAdapter {
             displayName: awayRoster.displayName,
             handle: awayRoster.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
             avatarUrl: awayRoster.avatarUrl,
-            points: awayTeam.points,
-            projected: null,
+            points: awayTeam.points ?? null,
+            projected: awayTeam.metadata?.proj ?? null,
             record: {
               wins: awayRoster.settings.wins,
               losses: awayRoster.settings.losses,
