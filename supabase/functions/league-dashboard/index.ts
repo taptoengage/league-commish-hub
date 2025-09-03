@@ -199,49 +199,52 @@ class SleeperAdapter {
           return null;
         }
 
-        const [team1, team2] = matchupPair;
-        const roster1 = rosterLookup.get(team1.roster_id);
-        const roster2 = rosterLookup.get(team2.roster_id);
+        // Deterministic pairing: lower roster_id = home, higher = away
+        const [homeTeam, awayTeam] = [...matchupPair].sort((a, b) => a.roster_id - b.roster_id);
+        const homeRoster = rosterLookup.get(homeTeam.roster_id);
+        const awayRoster = rosterLookup.get(awayTeam.roster_id);
 
-        if (!roster1 || !roster2) {
+        if (!homeRoster || !awayRoster) {
           console.warn(`Missing roster data for matchup ${matchupId}`);
           return null;
         }
 
         // Calculate win probability based on current points
-        const total = team1.points + team2.points;
-        const team1WinProb = total > 0 ? team1.points / total : 0.5;
+        const total = (homeTeam.points || 0) + (awayTeam.points || 0);
+        const homeWinProb = total > 0 ? (homeTeam.points || 0) / total : 0.5;
+
+        const id = `sleeper:${leagueId}:${week}:${matchupId}`;
 
         return {
-          id: `sleeper_${matchupId}`,
+          id,
           week,
           home: {
-            teamId: roster1.roster_id.toString(),
-            displayName: roster1.displayName,
-            handle: roster1.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
-            avatarUrl: roster1.avatarUrl,
-            points: team1.points,
+            teamId: homeRoster.roster_id.toString(),
+            displayName: homeRoster.displayName,
+            handle: homeRoster.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
+            avatarUrl: homeRoster.avatarUrl,
+            points: homeTeam.points,
             projected: null,
             record: {
-              wins: roster1.settings.wins,
-              losses: roster1.settings.losses,
-              ties: roster1.settings.ties,
+              wins: homeRoster.settings.wins,
+              losses: homeRoster.settings.losses,
+              ties: homeRoster.settings.ties,
             },
-            winProb: team1WinProb,
+            winProb: homeWinProb,
           },
           away: {
-            teamId: roster2.roster_id.toString(),
-            displayName: roster2.displayName,
-            handle: roster2.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
-            avatarUrl: roster2.avatarUrl,
-            points: team2.points,
+            teamId: awayRoster.roster_id.toString(),
+            displayName: awayRoster.displayName,
+            handle: awayRoster.user?.display_name?.toLowerCase().replace(/\s+/g, '') || undefined,
+            avatarUrl: awayRoster.avatarUrl,
+            points: awayTeam.points,
             projected: null,
             record: {
-              wins: roster2.settings.wins,
-              losses: roster2.settings.losses,
-              ties: roster2.settings.ties,
+              wins: awayRoster.settings.wins,
+              losses: awayRoster.settings.losses,
+              ties: awayRoster.settings.ties,
             },
-            winProb: 1 - team1WinProb,
+            winProb: 1 - homeWinProb,
           },
         };
       }).filter(Boolean) as Array<{ id: string; week: number; home: TeamSide; away: TeamSide }>;
