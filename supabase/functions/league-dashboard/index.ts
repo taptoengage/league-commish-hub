@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 // Types
@@ -339,6 +340,7 @@ serve(async (req) => {
             headers: { 
               ...corsHeaders, 
               'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=60',
               'X-Cache': 'HIT'
             }
           }
@@ -367,11 +369,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(data),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json',
-          'X-Cache': 'MISS'
-        }
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=60',
+            'X-Cache': 'MISS'
+          }
       }
     );
 
