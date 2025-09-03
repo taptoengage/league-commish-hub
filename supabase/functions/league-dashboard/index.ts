@@ -340,7 +340,7 @@ serve(async (req) => {
             headers: { 
               ...corsHeaders, 
               'Content-Type': 'application/json',
-              'Cache-Control': 'public, max-age=60',
+              'Cache-Control': 'max-age=60, stale-while-revalidate=300',
               'X-Cache': 'HIT'
             }
           }
@@ -372,7 +372,7 @@ serve(async (req) => {
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=60',
+            'Cache-Control': 'max-age=60, stale-while-revalidate=300',
             'X-Cache': 'MISS'
           }
       }
