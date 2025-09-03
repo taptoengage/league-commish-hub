@@ -359,14 +359,22 @@ serve(async (req) => {
 
     // Try Sleeper API first
     const adapter = new SleeperAdapter();
-    let data: LeagueDashboardDTO;
+    let data: LeagueDashboardDTO | null = null;
     
     try {
       data = await adapter.getLeagueDashboard(leagueId, week);
       console.log(`Sleeper API success for league ${leagueId}, week ${week}`);
     } catch (error) {
-      console.warn(`Sleeper API failed, using mock data: ${error}`);
-      data = getMockData(leagueId, week);
+      console.warn(`Sleeper API failed, attempting mock fallback: ${error}`);
+      try {
+        data = getMockData(leagueId, week);
+      } catch (fallbackErr) {
+        console.error('Mock fallback failed:', fallbackErr);
+        return new Response(
+          JSON.stringify({ error: { code: 'UPSTREAM_FAIL', message: String(error) } }),
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Cache the result
